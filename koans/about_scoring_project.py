@@ -33,11 +33,17 @@ from runner.koan import *
 # Your goal is to write the score method.
 
 def score(dice):
-    if dice == []:
+    if len(dice) == 0:
         return 0
 
     score = 0
     count_dict = {}
+    scoring_rules = {
+        1: 100,
+        5: 50,
+        '3_1': 1000,
+        '3_5': 500
+    }
 
     # create a dict of dice count
     for die in dice:
@@ -48,18 +54,12 @@ def score(dice):
 
     # calc score using dict
     for key, value in count_dict.items():
-        if key == 1:
+        if key == 1 or key == 5:
             if value >= 3:
-                score += 1000
+                score += scoring_rules["3_%s" %(key)]
                 value -= 3
             if value > 0:
-                score += (value * 100)
-        if key == 5:
-            if value >= 3:
-                score += 500
-                value -= 3
-            if value > 0:
-                score += (value * 50)
+                score += (value * scoring_rules[key])
         if value >= 3:
             score += (100 * key)
 
