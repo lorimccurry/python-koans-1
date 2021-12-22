@@ -21,48 +21,39 @@ from runner.koan import *
 class Proxy:
     def __init__(self, target_object):
         # WRITE CODE HERE
-        self._is_on = False
         self._messages = []
 
-        if isinstance(target_object, str):
-            self._class_string = target_object
-        else:
-            #initialize '_obj' attribute last. Trust me on this!
-            self._obj = target_object
+        #initialize '_obj' attribute last. Trust me on this!
+        self._obj = target_object
 
     # WRITE CODE HERE
     def __setattr__(self, attr_name, value):
-        not_private = attr_name[0] !='_'
-        if hasattr(self, '_messages') and not_private:
+        not_proxy_class_attr = attr_name[0] != '_'
+
+        if not_proxy_class_attr:
             self._messages.append(attr_name)
-        object.__setattr__(self, attr_name, value)
+            return setattr(self._obj, attr_name, value)
 
-    def power(self):
-        self._is_on = not self._is_on
-        self.add_name_to_messages(self.power.__name__)
+        # if try to append to _messages in __setattr__,
+        # will hit recursion error
+        # this is b/c ._messages in init may not be
+        # initialized before setattr is called, so the
+        # class calls getattr recursively trying to find
+        # ._messages
+        return object.__setattr__(self, attr_name, value)
 
-    def is_on(self):
-        return self._is_on
-
+    def __getattr__(self, attr_name):
+        self._messages.append(attr_name)
+        return getattr(self._obj, attr_name)
+#
     def messages(self):
         return self._messages
-
+#
     def was_called(self, attr_name):
         return self._messages.__contains__(attr_name)
-
+#
     def number_of_times_called(self, attr_name):
         return self._messages.count(attr_name)
-
-    def upper(self):
-        self.add_name_to_messages(self.upper.__name__)
-        return self._class_string.upper()
-
-    def split(self):
-        self.add_name_to_messages(self.split.__name__)
-        return self._class_string.split(' ')
-
-    def add_name_to_messages(self, name):
-        self._messages.append(name)
 
 # The proxy object should pass the following Koan:
 #
