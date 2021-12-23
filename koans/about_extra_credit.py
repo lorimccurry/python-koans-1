@@ -74,6 +74,9 @@ class Turn:
         self._turn_over = is_over
 
     def roll(self):
+        if self.turn_over:
+            raise TurnError('It must be your turn to roll.')
+
         if len(self._active_dice) == 0:
             self._dice.roll(5)
         else:
@@ -82,6 +85,9 @@ class Turn:
         self.active_dice = self._dice.values
 
     def calculate_score(self):
+        if self.turn_over:
+            raise TurnError('It must be your turn to score.')
+
         if len(self.active_dice) == 0:
             return 0
 
@@ -131,6 +137,9 @@ class Turn:
         self._current_score = 0
         self._turn_over = True
         self.active_dice = []
+
+class TurnError(Exception):
+    pass
 
 class Player(Turn):
     def __init__(self, name):
@@ -305,6 +314,14 @@ class AboutExtraCredit(Koan):
         turn.roll()
         self.assertEqual(5, len(turn.active_dice))
 
+    def test_no_roll_or_calc_score_when_not_turn(self):
+        turn = Turn()
+        turn.turn_over = True
+        with self.assertRaises(TurnError):
+            turn.roll()
+        with self.assertRaises(TurnError):
+            turn.calculate_score()
+
     def test_new_player_has_name_and_points(self):
         player = Player('player 1')
         self.assertEqual(player.name, 'player 1')
@@ -320,8 +337,3 @@ class AboutExtraCredit(Koan):
         self.assertEqual(player.turn_over, True)
         self.assertEqual(player.active_dice, [])
         self.assertEqual(player.current_score, 0)
-
-
-
-    # def test_turn_ends_raises_error(self):
-        # pass
