@@ -23,11 +23,11 @@ from koans.about_dice_project import DiceSet
         # OK - scoring dice should be removed for non scoring dice
         # OK - if no dice are left in 1 roll, then roll all 5 dice again
 
-    # turn's accumulated score is kept and added to the players
+    # OK - turn's accumulated score is kept and added to the players
         # accumulated total if they don't have a zero
         # point roll
 
-    # a player can choose to roll again after each roll unless
+    # OK - a player can choose to roll again after each roll unless
         # it is a 0 point roll
 
     # start
@@ -334,6 +334,16 @@ class AboutExtraCredit(Koan):
         player.calculate_score()
         player.end_turn()
         self.assertEqual(player.total_points, 1050)
+        self.assertEqual(player.turn_over, True)
+        self.assertEqual(player.active_dice, [])
+        self.assertEqual(player.current_score, 0)
+
+    def test_player_non_scoring_roll_ends_turn_and_total_score_does_not_change(self):
+        player = Player('one')
+        player._total_points = 500
+        player.active_dice = [3,3,4,4]
+        player.calculate_score()
+        self.assertEqual(player.total_points, 500)
         self.assertEqual(player.turn_over, True)
         self.assertEqual(player.active_dice, [])
         self.assertEqual(player.current_score, 0)
