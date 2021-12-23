@@ -14,7 +14,7 @@ from runner.koan import *
 from koans.about_scoring_project import score
 from koans.about_dice_project import DiceSet
 
-    # 2 or more players - start w/ 2 hardcoded
+    # 2 or more players - start w/ 1 hardcoded
 
     # i can roll single or multiple dice
     # rolls dont know about one another
@@ -57,6 +57,7 @@ class Turn:
         self._dice = DiceSet()
         self._active_dice = []
         self._current_score = 0
+        self._turn_over = False
 
     @property
     def active_dice(self):
@@ -78,10 +79,11 @@ class Turn:
 
         self.active_dice = self._dice.values
 
-    def calculate_score(self, dice):
-        if len(dice) == 0:
+    def calculate_score(self):
+        if len(self.active_dice) == 0:
             return 0
 
+        calculating_dice = self.active_dice.copy()
         self.active_dice = []
         score = 0
         count_dict = {}
@@ -93,7 +95,7 @@ class Turn:
         }
 
         # create a dict of dice count
-        for die in dice:
+        for die in calculating_dice:
             if die in count_dict.keys():
                 count_dict[die] += 1
             else:
@@ -110,7 +112,12 @@ class Turn:
             elif value >= 3:
                 score += (100 * key)
             else:
-                self._active_dice.extend([key] * value)
+                self.active_dice.extend([key] * value)
+
+        if score == 0:
+            self._current_score = 0
+            self._turn_over = True
+            return 0
 
         self._current_score += score
 
@@ -123,91 +130,104 @@ class AboutExtraCredit(Koan):
 
     def test_score_of_an_empty_list_is_zero(self):
         turn = Turn()
-        turn.calculate_score([])
+        turn.active_dice = []
+        turn.calculate_score()
         self.assertEqual(0, turn.current_score)
         self.assertEqual([], turn.active_dice)
 
     def test_score_of_a_single_roll_of_5_is_50(self):
         turn = Turn()
-        turn.calculate_score([5])
+        turn.active_dice = [5]
+        turn.calculate_score()
         self.assertEqual(50, turn.current_score)
         self.assertEqual([], turn.active_dice)
 
     def test_score_of_a_single_roll_of_1_is_100(self):
         turn = Turn()
-        turn.calculate_score([1])
+        turn.active_dice = [1]
+        turn.calculate_score()
         self.assertEqual(100, turn.current_score)
         self.assertEqual([], turn.active_dice)
 
     def test_score_of_multiple_1s_and_5s_is_the_sum_of_individual_scores(self):
         turn = Turn()
-        turn.calculate_score([1,5,5,1])
+        turn.active_dice = [1,5,5,1]
+        turn.calculate_score()
         self.assertEqual(300, turn.current_score)
         self.assertEqual([], turn.active_dice)
 
     def test_score_of_single_2s_3s_4s_and_6s_are_zero(self):
-        ### FEATURE ###
-        # if active_dice same after scoring, then
-        # turn is over
         turn = Turn()
-        turn.calculate_score([2,3,4,6])
+        turn.active_dice = [2,3,4,6]
+        turn.calculate_score()
         self.assertEqual(0, turn.current_score)
         self.assertEqual([2,3,4,6], turn.active_dice)
 
     def test_score_of_a_triple_1_is_1000(self):
         turn = Turn()
-        turn.calculate_score([1,1,1])
+        turn.active_dice = [1,1,1]
+        turn.calculate_score()
         self.assertEqual(1000, turn.current_score)
         self.assertEqual([], turn.active_dice)
 
     def test_score_of_other_triples_is_100x(self):
         turn = Turn()
-        turn.calculate_score([2,2,2])
+        turn.active_dice = [2,2,2]
+        turn.calculate_score()
         self.assertEqual(200, turn.current_score)
         self.assertEqual([], turn.active_dice)
 
-        turn.calculate_score([3,3,3])
+        turn.active_dice = [3,3,3]
+        turn.calculate_score()
         self.assertEqual(500, turn.current_score)
         self.assertEqual([], turn.active_dice)
 
-        turn.calculate_score([4,4,4])
+        turn.active_dice = [4,4,4]
+        turn.calculate_score()
         self.assertEqual(900, turn.current_score)
         self.assertEqual([], turn.active_dice)
 
-        turn.calculate_score([5,5,5])
+        turn.active_dice = [5,5,5]
+        turn.calculate_score()
         self.assertEqual(1400, turn.current_score)
         self.assertEqual([], turn.active_dice)
 
-        turn.calculate_score([6,6,6])
+        turn.active_dice = [6,6,6]
+        turn.calculate_score()
         self.assertEqual(2000, turn.current_score)
         self.assertEqual([], turn.active_dice)
 
     def test_score_of_mixed_is_sum(self):
         turn = Turn()
-        turn.calculate_score([2,5,2,2,3])
+        turn.active_dice = [2,5,2,2,3]
+        turn.calculate_score()
         self.assertEqual(250, turn.current_score)
         self.assertEqual([3], turn.active_dice)
 
         ### FEATURE
         # this would turn the corner and have a fresh 5!!
-        turn.calculate_score([5,5,5,5])
+        turn.active_dice = [5,5,5,5]
+        turn.calculate_score()
         self.assertEqual(800, turn.current_score)
         self.assertEqual([], turn.active_dice)
 
         ### FEATURE
         # this would turn the corner and have a fresh 5!!
-        turn.calculate_score([1,1,1,5,1])
+        turn.active_dice = [1,1,1,5,1]
+        turn.calculate_score()
         self.assertEqual(1950, turn.current_score)
         self.assertEqual([], turn.active_dice)
 
 
     def test_ones_not_left_out(self):
         turn = Turn()
-        turn.calculate_score([1,2,2,2])
+        turn.active_dice = [1,2,2,2]
+        turn.calculate_score()
         self.assertEqual(300, turn.current_score)
         self.assertEqual([], turn.active_dice)
 
-        turn.calculate_score([1,5,2,2,2])
+        turn.active_dice = [1,5,2,2,2]
+        turn.calculate_score()
         self.assertEqual(650, turn.current_score)
         self.assertEqual([], turn.active_dice)
 
@@ -216,20 +236,24 @@ class AboutExtraCredit(Koan):
         turn.roll()
         self.assertEqual(5, len(turn.active_dice))
 
-    def test_first_roll_calc_increases_score(self):
-        turn = Turn()
-        turn.roll()
-        turn.calculate_score(turn.active_dice)
-        self.assertGreater(turn.current_score, 0)
-
     def test_a_roll_removes_scoring_dice_from_next_roll(self):
         turn = Turn()
         # first roll
-        turn.calculate_score([1,1,5,3,4])
-        dice_count = len(turn.active_dice)
+        turn.active_dice = [1,1,5,3,4]
+        turn.calculate_score()
         self.assertEqual([3,4], turn.active_dice)
 
         # second roll before scoring
         turn.roll()
         self.assertEqual(2, len(turn.active_dice))
 
+    def test_turn_ends_when_no_scoring_dice(self):
+        turn = Turn()
+        turn.active_dice = [3,3,4]
+        turn.calculate_score()
+        self.assertEqual(0, turn.current_score)
+        self.assertEqual([3,3,4], turn.active_dice)
+        self.assertEqual(turn._turn_over, True)
+
+    # def test_turn_ends_raises_error(self):
+        # pass
