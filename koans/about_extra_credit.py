@@ -16,8 +16,8 @@ from koans.about_dice_project import DiceSet
 
     # 2 or more players - start w/ 1 hardcoded
 
-    # i can roll single or multiple dice
-    # rolls dont know about one another
+    # OK - i can roll single or multiple dice
+    # OK - rolls dont know about one another
 
     # DiceSet class
         # OK - scoring dice should be removed for non scoring dice
@@ -39,12 +39,6 @@ from koans.about_dice_project import DiceSet
     # final round
         # one more roll
         # highest score after roll wins
-class Player:
-
-    # player has game points
-    # player has a turn
-
-    pass
 
 class Game:
     # game has num of players
@@ -74,6 +68,10 @@ class Turn:
     @property
     def turn_over(self):
         return self._turn_over
+
+    @turn_over.setter
+    def turn_over(self, is_over):
+        self._turn_over = is_over
 
     def roll(self):
         if len(self._active_dice) == 0:
@@ -127,10 +125,34 @@ class Turn:
     def handle_zero_score(self, score):
         if score != 0:
             return
+        self.clean_up_after_turn()
 
+    def clean_up_after_turn(self):
         self._current_score = 0
         self._turn_over = True
         self.active_dice = []
+
+class Player(Turn):
+    def __init__(self, name):
+        self._name = name
+        self._total_points = 0
+        super().__init__()
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def total_points(self):
+        return self._total_points
+
+    @total_points.setter
+    def total_points(self, new_total):
+        self._total_points = new_total
+
+    def end_turn(self):
+        self.total_points += self.current_score
+        self.clean_up_after_turn()
 
 class AboutExtraCredit(Koan):
     # Write tests here. If you need extra test classes add them to the
@@ -222,7 +244,6 @@ class AboutExtraCredit(Koan):
         self.assertEqual(1950, turn.current_score)
         self.assertEqual([], turn.active_dice)
 
-
     def test_ones_not_left_out(self):
         turn = Turn()
         turn.active_dice = [1,2,2,2]
@@ -283,6 +304,22 @@ class AboutExtraCredit(Koan):
 
         turn.roll()
         self.assertEqual(5, len(turn.active_dice))
+
+    def test_new_player_has_name_and_points(self):
+        player = Player('player 1')
+        self.assertEqual(player.name, 'player 1')
+        self.assertEqual(player.total_points, 0)
+        self.assertEqual(player.turn_over, False)
+
+    def test_ending_player_turn_cleans_up_and_banks_current_score(self):
+        player = Player('one')
+        player.active_dice = [1,1,1,5,3]
+        player.calculate_score()
+        player.end_turn()
+        self.assertEqual(player.total_points, 1050)
+        self.assertEqual(player.turn_over, True)
+        self.assertEqual(player.active_dice, [])
+        self.assertEqual(player.current_score, 0)
 
 
 
