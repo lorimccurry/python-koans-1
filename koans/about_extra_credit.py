@@ -20,8 +20,8 @@ from koans.about_dice_project import DiceSet
     # rolls dont know about one another
 
     # DiceSet class
-        # scoring dice should be removed for non scoring dice
-        # if no dice are left in 1 roll, then roll all dice again
+        # OK - scoring dice should be removed for non scoring dice
+        # OK - if no dice are left in 1 roll, then roll all 5 dice again
 
     # turn's accumulated score is kept and added to the players
         # accumulated total if they don't have a zero
@@ -71,6 +71,10 @@ class Turn:
     def current_score(self):
         return self._current_score
 
+    @property
+    def turn_over(self):
+        return self._turn_over
+
     def roll(self):
         if len(self._active_dice) == 0:
             self._dice.roll(5)
@@ -114,15 +118,19 @@ class Turn:
             else:
                 self.active_dice.extend([key] * value)
 
-        if score == 0:
-            self._current_score = 0
-            self._turn_over = True
-            return 0
+        self.handle_zero_score(score)
 
         self._current_score += score
 
         return score
 
+    def handle_zero_score(self, score):
+        if score != 0:
+            return
+
+        self._current_score = 0
+        self._turn_over = True
+        self.active_dice = []
 
 class AboutExtraCredit(Koan):
     # Write tests here. If you need extra test classes add them to the
@@ -161,7 +169,7 @@ class AboutExtraCredit(Koan):
         turn.active_dice = [2,3,4,6]
         turn.calculate_score()
         self.assertEqual(0, turn.current_score)
-        self.assertEqual([2,3,4,6], turn.active_dice)
+        self.assertEqual([], turn.active_dice)
 
     def test_score_of_a_triple_1_is_1000(self):
         turn = Turn()
@@ -204,15 +212,11 @@ class AboutExtraCredit(Koan):
         self.assertEqual(250, turn.current_score)
         self.assertEqual([3], turn.active_dice)
 
-        ### FEATURE
-        # this would turn the corner and have a fresh 5!!
         turn.active_dice = [5,5,5,5]
         turn.calculate_score()
         self.assertEqual(800, turn.current_score)
         self.assertEqual([], turn.active_dice)
 
-        ### FEATURE
-        # this would turn the corner and have a fresh 5!!
         turn.active_dice = [1,1,1,5,1]
         turn.calculate_score()
         self.assertEqual(1950, turn.current_score)
@@ -251,9 +255,36 @@ class AboutExtraCredit(Koan):
         turn = Turn()
         turn.active_dice = [3,3,4]
         turn.calculate_score()
+        self.assertEqual(True, turn.turn_over)
+
+    def test_non_scoring_roll_zeroes_current_turn_score(self):
+        turn = Turn()
+        turn.active_dice = [3,3,4]
+        turn.calculate_score()
         self.assertEqual(0, turn.current_score)
-        self.assertEqual([3,3,4], turn.active_dice)
-        self.assertEqual(turn._turn_over, True)
+
+    def test_non_scoring_roll_empties_dice_in_hand(self):
+        turn = Turn()
+        turn.active_dice = [3,3,4]
+        turn.calculate_score()
+        self.assertEqual([], turn.active_dice)
+
+    def test_turn_does_not_end_with_scoring_dice(self):
+        turn = Turn()
+        turn.active_dice = [1,1,5,3,4]
+        turn.calculate_score()
+        self.assertEqual(False, turn.turn_over)
+
+    def test_depleting_available_dice_with_scoring_roll_will_replenish_five_dice(self):
+        turn = Turn()
+        turn.active_dice = [5,5,5,5]
+        turn.calculate_score()
+        self.assertEqual([], turn.active_dice)
+
+        turn.roll()
+        self.assertEqual(5, len(turn.active_dice))
+
+
 
     # def test_turn_ends_raises_error(self):
         # pass
