@@ -43,7 +43,7 @@ from koans.about_dice_project import DiceSet
 class Game:
     # game has num of players
 
-    # game should know when time for final round
+    # game should know when time for final round (3000+ points)
     pass
 
 class Turn:
@@ -138,9 +138,6 @@ class Turn:
         self._turn_over = True
         self.active_dice = []
 
-class TurnError(Exception):
-    pass
-
 class Player(Turn):
     def __init__(self, name):
         self._name = name
@@ -160,8 +157,16 @@ class Player(Turn):
         self._total_points = new_total
 
     def end_turn(self):
+        if self.total_points + self.current_score < 300:
+            raise ScoreError('You need a minimum of 300 points to end your turn.')
         self.total_points += self.current_score
         self.clean_up_after_turn()
+
+class TurnError(Exception):
+    pass
+
+class ScoreError(Exception):
+    pass
 
 class AboutExtraCredit(Koan):
     # Write tests here. If you need extra test classes add them to the
@@ -333,17 +338,28 @@ class AboutExtraCredit(Koan):
         player.active_dice = [1,1,1,5,3]
         player.calculate_score()
         player.end_turn()
-        self.assertEqual(player.total_points, 1050)
-        self.assertEqual(player.turn_over, True)
-        self.assertEqual(player.active_dice, [])
-        self.assertEqual(player.current_score, 0)
+        self.assertEqual(1050, player.total_points)
+        self.assertEqual(True, player.turn_over)
+        self.assertEqual([], player.active_dice)
+        self.assertEqual(0, player.current_score)
 
     def test_player_non_scoring_roll_ends_turn_and_total_score_does_not_change(self):
         player = Player('one')
         player._total_points = 500
         player.active_dice = [3,3,4,4]
         player.calculate_score()
-        self.assertEqual(player.total_points, 500)
-        self.assertEqual(player.turn_over, True)
-        self.assertEqual(player.active_dice, [])
-        self.assertEqual(player.current_score, 0)
+        self.assertEqual(500, player.total_points)
+        self.assertEqual(True, player.turn_over)
+        self.assertEqual([], player.active_dice)
+        self.assertEqual(0, player.current_score)
+
+    def test_minimum_initial_score_of_300(self):
+        player = Player('one')
+        player.active_dice = [1,1,3,4,5]
+        player.calculate_score()
+        with self.assertRaises(ScoreError):
+            player.end_turn()
+        self.assertEqual(0, player.total_points)
+        self.assertEqual(False, player.turn_over)
+        self.assertEqual([3,4], player.active_dice)
+        self.assertEqual(250, player.current_score)
