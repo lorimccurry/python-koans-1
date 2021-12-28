@@ -166,6 +166,7 @@ class Player(Turn):
             raise ScoreError('You need a minimum of 300 points to end your turn.')
         self.total_points += self.current_score
         self.clean_up_after_turn()
+        return 'Total points after turn: ' + str(self.total_points)
 
 class Game():
     def __init__(self):
@@ -442,11 +443,12 @@ class AboutExtraCredit(Koan):
         player.turn_over = False
         player.active_dice = [1,1,1,5,3]
         player.calculate_score()
-        player.end_turn()
+        end_turn_return = player.end_turn()
         self.assertEqual(1050, player.total_points)
         self.assertEqual(True, player.turn_over)
         self.assertEqual([], player.active_dice)
         self.assertEqual(0, player.current_score)
+        self.assertEqual('Total points after turn: 1050', end_turn_return)
 
     def test_player_non_scoring_roll_ends_turn_and_total_score_does_not_change(self):
         player = Player('one')
