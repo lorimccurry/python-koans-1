@@ -196,18 +196,15 @@ class Game():
         self._final_round = is_final
 
     def add_player(self, name):
-        self._players.append(Player(name))
+        player = Player(name)
+        self._players.append(player)
+        return player
 
     def new_turn(self):
         if self._game_over == True:
             raise GameError('The game is over!')
 
-        if self.active_player_index == None:
-            self.active_player_index = 0
-        elif self.active_player_index + 1 >= len(self.players):
-            self.active_player_index = 0
-        else:
-            self.active_player_index += 1
+        self.set_active_player_index()
 
         player_has_3000 = len([player for player in self.players if player.total_points >= 3000]) == 1
 
@@ -223,11 +220,24 @@ class Game():
         if self._final_round_turns >= len(self.players) - 1:
             self._game_over = True
 
+        return self.players[self.active_player_index]
+
+    def set_active_player_index(self):
+        if self.active_player_index == None:
+            self.active_player_index = 0
+        elif self.active_player_index + 1 >= len(self.players):
+            self.active_player_index = 0
+        else:
+            self.active_player_index += 1
+
+    # TODO: test winner return!
     def set_winner(self):
         if self._game_over == False:
             raise GameError('There can only be a winner when the game is over!')
         winning_player = max(self.players, key=attrgetter('total_points'))
         winning_player.is_winner = True
+
+        return winning_player.name + ' is the winner!'
 
     # game should know when time for final round (3000+ points)
     # game needs to check players scores at the start of each turn
@@ -473,11 +483,15 @@ class AboutExtraCredit(Koan):
     def test_adding_players(self):
         game = Game()
 
-        game.add_player('player 1')
+        p1 = game.add_player('player 1')
+        self.assertEqual('player 1', p1.name)
+        self.assertEqual(p1, game.players[0])
         self.assertEqual(1, len(game.players))
         self.assertEqual('player 1', game.players[0].name)
 
-        game.add_player('player 2')
+        p2 = game.add_player('player 2')
+        self.assertEqual('player 2', p2.name)
+        self.assertEqual(p2, game.players[1])
         self.assertEqual(2, len(game.players))
         self.assertEqual('player 2', game.players[1].name)
 
@@ -488,9 +502,10 @@ class AboutExtraCredit(Koan):
         self.assertEqual(True, game.players[0].turn_over)
         self.assertEqual(True, game.players[1].turn_over)
 
-        game.new_turn()
+        player_with_turn = game.new_turn()
         self.assertEqual(False, game.players[0].turn_over)
         self.assertEqual(True, game.players[1].turn_over)
+        self.assertEqual(game.players[0], player_with_turn)
         self.assertEqual(0, game.active_player_index)
         self.assertEqual(False, game.final_round)
 
@@ -522,14 +537,16 @@ class AboutExtraCredit(Koan):
         game.players[2].total_points = 2400
 
         # first player after 3000 is hit
-        game.new_turn()
+        player_with_turn = game.new_turn()
         self.assertEqual(2, game.active_player_index)
+        self.assertEqual(game.players[2], player_with_turn)
         self.assertEqual(1, game._final_round_turns)
         game.players[2].turn_over = True
 
         # last roll for trailing player
-        game.new_turn()
+        player_with_turn = game.new_turn()
         self.assertEqual(0, game.active_player_index)
+        self.assertEqual(game.players[0], player_with_turn)
         self.assertEqual(2, game._final_round_turns)
         self.assertEqual(True, game._game_over)
 
