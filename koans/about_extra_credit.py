@@ -10,6 +10,43 @@
 # Write a player class and a Game class to complete the project.  This
 # is a free form assignment, so approach it however you desire.
 
+"""
+Game Command Instructions:
+g = Game()
+g.add_player('player one')
+g.add_player('player two')
+
+# start a new turn with a player
+player = g.new_turn()
+
+# rolling commands
+player.roll()
+player.calculate_score()
+
+# repeat rolling commands as desired
+# if 0 score is rolled, turn automatically ends
+
+# end turn and bank score
+player.end_turn()
+
+# repeat new_turn() for next player
+# and roll/calculation functions
+
+# when one player's total is >= 3000,
+# the final round begins for the trailing players
+
+# after final round, the game is over
+g.set_winner()
+
+# other handy game commands
+player.current_score #score while rolling
+player.active_dice #current dice in play while rolling
+player.total_points #total banked score
+player.name
+player.turn_over #True: unable to roll; False: able to roll
+"""
+
+
 from typing import List
 from operator import attrgetter
 from runner.koan import *
