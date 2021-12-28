@@ -78,6 +78,7 @@ class Turn:
             self._dice.roll(len(self._active_dice))
 
         self.active_dice = self._dice.values
+        return self.active_dice
 
     def calculate_score(self):
         if self.turn_over:
@@ -358,8 +359,11 @@ class AboutExtraCredit(Koan):
     def test_first_roll_returns_5_dice(self):
         turn = Turn()
         turn.turn_over = False
-        turn.roll()
+        dice_return = turn.roll()
+
         self.assertEqual(5, len(turn.active_dice))
+        self.assertEqual(5, len(dice_return))
+        self.assertEqual(dice_return, turn.active_dice)
 
     def test_a_roll_removes_scoring_dice_from_next_roll(self):
         turn = Turn()
@@ -370,8 +374,10 @@ class AboutExtraCredit(Koan):
         self.assertEqual([3,4], turn.active_dice)
 
         # second roll before scoring
-        turn.roll()
+        return_roll = turn.roll()
         self.assertEqual(2, len(turn.active_dice))
+        self.assertEqual(2, len(return_roll))
+        self.assertEqual(return_roll, turn.active_dice)
 
     def test_turn_ends_when_no_scoring_dice(self):
         turn = Turn()
@@ -408,8 +414,10 @@ class AboutExtraCredit(Koan):
         turn.calculate_score()
         self.assertEqual([], turn.active_dice)
 
-        turn.roll()
+        return_roll = turn.roll()
         self.assertEqual(5, len(turn.active_dice))
+        self.assertEqual(5, len(return_roll))
+        self.assertEqual(turn.active_dice, turn.active_dice)
 
     def test_no_roll_or_calc_score_when_not_turn(self):
         turn = Turn()
