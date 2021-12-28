@@ -205,22 +205,22 @@ class Game():
             raise GameError('The game is over!')
 
         self.set_active_player_index()
+        active_player = self.players[self.active_player_index]
 
-        player_has_3000 = len([player for player in self.players if player.total_points >= 3000]) == 1
+        a_player_has_3000 = len([player for player in self.players if player.total_points >= 3000]) == 1
 
-        if player_has_3000:
+        if a_player_has_3000:
             self.final_round = True
 
-        if self.final_round == True and self.players[self.active_player_index].total_points < 3000:
+        if self.final_round == True and active_player.total_points < 3000:
             self._final_round_turns += 1
 
-        # allows player to roll
-        self.players[self.active_player_index].turn_over = False
+        self.allow_player_to_roll(active_player)
 
         if self._final_round_turns >= len(self.players) - 1:
             self._game_over = True
 
-        return self.players[self.active_player_index]
+        return active_player
 
     def set_active_player_index(self):
         if self.active_player_index == None:
@@ -230,7 +230,6 @@ class Game():
         else:
             self.active_player_index += 1
 
-    # TODO: test winner return!
     def set_winner(self):
         if self._game_over == False:
             raise GameError('There can only be a winner when the game is over!')
@@ -239,12 +238,8 @@ class Game():
 
         return winning_player.name + ' is the winner!'
 
-    # game should know when time for final round (3000+ points)
-    # game needs to check players scores at the start of each turn
-    # prop on player used_final_turn
-    # bail if used_final_turn and final_round
-    # game_over function
-        # player.winner = True
+    def allow_player_to_roll(self, player):
+        player.turn_over = False
 
 class TurnError(Exception):
     pass
@@ -579,8 +574,9 @@ class AboutExtraCredit(Koan):
         self.assertEqual(False, game.players[2].is_winner)
 
         game._game_over = True
-        game.set_winner()
+        winner_return = game.set_winner()
 
         self.assertEqual(False, game.players[0].is_winner)
         self.assertEqual(True, game.players[1].is_winner)
         self.assertEqual(False, game.players[2].is_winner)
+        self.assertEqual('player 2 is the winner!', winner_return)
