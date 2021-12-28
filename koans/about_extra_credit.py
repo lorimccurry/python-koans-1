@@ -15,32 +15,6 @@ from operator import attrgetter
 from runner.koan import *
 from koans.about_scoring_project import score
 from koans.about_dice_project import DiceSet
-
-    # 2 or more players - start w/ 1 hardcoded
-
-    # OK - i can roll single or multiple dice
-    # OK - rolls dont know about one another
-
-    # DiceSet class
-        # OK - scoring dice should be removed for non scoring dice
-        # OK - if no dice are left in 1 roll, then roll all 5 dice again
-
-    # OK - turn's accumulated score is kept and added to the players
-        # accumulated total if they don't have a zero
-        # point roll
-
-    # OK - a player can choose to roll again after each roll unless
-        # it is a 0 point roll
-
-    # OK - start
-    # if no points, then must roll 300 min to get started
-
-    # OK end
-    # 3000+ points sends to final round
-
-    # OK - final round
-        # OK - one more roll
-        # OK - highest score after roll wins
 class Turn:
     def __init__(self):
         self._dice = DiceSet()
